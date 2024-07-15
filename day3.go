@@ -7,6 +7,23 @@ import (
 	"strings"
 )
 
+type VisitedList map[int]map[int]bool
+
+func (v VisitedList) Set(x, y int, value bool) {
+	if v[x] == nil {
+		v[x] = make(map[int]bool)
+	}
+	v[x][y] = value
+}
+
+func (v VisitedList) Get(x, y int) bool {
+	if row, exists := v[x]; exists {
+		_, exists := row[y]
+		return exists
+	}
+	return false
+}
+
 func isNumber(str string) bool {
 	_, err := strconv.Atoi(str)
 
@@ -26,11 +43,16 @@ func Reverse(str string) string {
 	return result.String()
 }
 
-func ExtractNumberTendingLeft(line *[]string, start int) int {
+func ExtractNumberTendingLeft(line *[]string, start int, height int, visited *VisitedList) int {
 	k := start
 	var numStr strings.Builder
 
+	if visited.Get(height, k) {
+		return 0
+	}
+
 	for k >= 0 && isNumber((*line)[k]) {
+		visited.Set(height, k, true)
 		numStr.WriteString((*line)[k])
 		k--
 	}
@@ -40,16 +62,19 @@ func ExtractNumberTendingLeft(line *[]string, start int) int {
 		panic(err)
 	}
 
-  fmt.Println("got", num)
-
 	return num
 }
 
-func ExtractNumberTendingRight(line *[]string, start int) int {
+func ExtractNumberTendingRight(line *[]string, start int, height int, visited *VisitedList) int {
 	k := start
 	var numStr strings.Builder
 
+	if visited.Get(height, k) {
+		return 0
+	}
+
 	for k <= len(*line)-1 && isNumber((*line)[k]) {
+		visited.Set(height, k, true)
 		numStr.WriteString((*line)[k])
 		k++
 	}
@@ -58,8 +83,6 @@ func ExtractNumberTendingRight(line *[]string, start int) int {
 	if err != nil {
 		panic(err)
 	}
-
-  fmt.Println("got", num)
 
 	return num
 }
@@ -71,6 +94,7 @@ func main() {
 	}
 
 	lines := strings.Split(string(data), "\n")
+	visited := make(VisitedList)
 	sum := 0
 
 	for i := 0; i < len(lines); i++ {
@@ -84,7 +108,7 @@ func main() {
 				// left
 				if j >= 1 && isNumber(string(line[j-1])) {
 					lineRef := strings.Split(line, "")
-					sum += ExtractNumberTendingLeft(&lineRef, j-1)
+					sum += ExtractNumberTendingLeft(&lineRef, j-1, i, &visited)
 
 					fmt.Printf("%s found in left of %s\n", string(line[j-1]), ch)
 				}
@@ -92,7 +116,7 @@ func main() {
 				// right
 				if j+2 <= len(line) && isNumber(string(line[j+1])) {
 					lineRef := strings.Split(line, "")
-					sum += ExtractNumberTendingLeft(&lineRef, j+1)
+					sum += ExtractNumberTendingRight(&lineRef, j+1, i, &visited)
 
 					fmt.Printf("%s found in right of %s\n", string(line[j+1]), ch)
 				}
@@ -102,13 +126,10 @@ func main() {
 					// check if number tending to left
 					if j-1 >= 0 && isNumber(string(lines[i-1][j-1])) {
 						lineRef := strings.Split(lines[i-1], "")
-						sum += ExtractNumberTendingLeft(&lineRef, j)
-					}
-
-					// check if number tending to right
-					if j+2 <= len(lines[i-1]) && isNumber(string(lines[i-1][j+1])) {
+						sum += ExtractNumberTendingLeft(&lineRef, j, i-1, &visited)
+					} else if j+2 <= len(lines[i-1]) && isNumber(string(lines[i-1][j+1])) { // check if number tending to right
 						lineRef := strings.Split(lines[i-1], "")
-						sum += ExtractNumberTendingRight(&lineRef, j)
+						sum += ExtractNumberTendingRight(&lineRef, j, i-1, &visited)
 					}
 
 					fmt.Printf("%s found in top of %s\n", string(lines[i-1][j]), ch)
@@ -119,20 +140,61 @@ func main() {
 					// check if number tending to left
 					if j-1 >= 0 && isNumber(string(lines[i+1][j-1])) {
 						lineRef := strings.Split(lines[i+1], "")
-						sum += ExtractNumberTendingLeft(&lineRef, j)
-					}
-
-					// check if number tending to right
-					if j+2 <= len(lines[i+1]) && isNumber(string(lines[i+1][j+1])) {
+						sum += ExtractNumberTendingLeft(&lineRef, j, i+1, &visited)
+					} else if j+2 <= len(lines[i+1]) && isNumber(string(lines[i+1][j+1])) { // check if number tending to right
 						lineRef := strings.Split(lines[i+1], "")
-						sum += ExtractNumberTendingRight(&lineRef, j)
+						sum += ExtractNumberTendingRight(&lineRef, j, i+1, &visited)
 					}
 
 					fmt.Printf("%s found in bottom of %s\n", string(lines[i+1][j]), ch)
 				}
+
+				// diagonal top-left
+				if i-1 >= 0 && isNumber(string(lines[i-1][j-1])) {
+					// check if number tending to left
+					if j-1 >= 0 && isNumber(string(lines[i-1][j-2])) {
+						lineRef := strings.Split(lines[i-1], "")
+						sum += ExtractNumberTendingLeft(&lineRef, j-1, i-1, &visited)
+					} else if j+2 <= len(lines[i-1]) && isNumber(string(lines[i-1][j])) { // check if number tending to right
+						lineRef := strings.Split(lines[i-1], "")
+						sum += ExtractNumberTendingRight(&lineRef, j-1, i-1, &visited)
+					}
+
+					fmt.Printf("%s found in top-left of %s\n", string(lines[i-1][j-1]), ch)
+				}
+
+				// diagonal top-right
+				if i-1 >= 0 && isNumber(string(lines[i-1][j+1])) {
+					// check if number tending to left
+					if j-1 >= 0 && isNumber(string(lines[i-1][j])) {
+						lineRef := strings.Split(lines[i-1], "")
+						sum += ExtractNumberTendingLeft(&lineRef, j+1, i-1, &visited)
+					} else if j+2 <= len(lines[i-1]) && isNumber(string(lines[i-1][j+2])) { // check if number tending to right
+						lineRef := strings.Split(lines[i-1], "")
+						sum += ExtractNumberTendingRight(&lineRef, j+1, i-1, &visited)
+					}
+
+					fmt.Printf("%s found in top-right of %s\n", string(lines[i-1][j+1]), ch)
+				}
+
+				// diagonal bottom-left
+				if i+2 <= len(lines) && isNumber(string(lines[i+1][j-1])) {
+					// check if number tending to left
+					if j-1 >= 0 && isNumber(string(lines[i+1][j-2])) {
+						lineRef := strings.Split(lines[i+1], "")
+						sum += ExtractNumberTendingLeft(&lineRef, j-1, i+1, &visited)
+					} else if j+2 <= len(lines[i+1]) && isNumber(string(lines[i+1][j])) { // check if number tending to right
+						lineRef := strings.Split(lines[i+1], "")
+						sum += ExtractNumberTendingRight(&lineRef, j-1, i+1, &visited)
+					}
+
+					fmt.Printf("%s found in bottom-left of %s\n", string(lines[i+1][j-1]), ch)
+				}
+
+        // TODO: similary check bottom-right diagonal
 			}
 		}
 	}
 
-	fmt.Println("answer=", sum)
+	fmt.Println("sum=", sum)
 }
