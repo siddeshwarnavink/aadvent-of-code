@@ -7,37 +7,7 @@ import (
 	"strings"
 )
 
-type Number struct {
-	num    int
-	numLen int
-	x      int
-	y      int
-	next   *Number
-	prev   *Number
-}
-
-func (n *Number) Append(number *Number) {
-	for n.next != nil {
-		n = n.next
-	}
-	number.prev = n
-	n.next = number
-}
-
-func (n *Number) Remove() {
-	if n.prev != nil {
-		n.prev.next = n.next
-	}
-
-	if n.next != nil {
-		n.next.prev = n.prev
-	}
-
-	n.next = nil
-	n.prev = nil
-}
-
-func isNumStr(str string) bool {
+func isNumber(str string) bool {
 	_, err := strconv.Atoi(str)
 
 	if err != nil {
@@ -47,33 +17,13 @@ func isNumStr(str string) bool {
 	return true
 }
 
-// TODO Complete this
-func checkAdjecent(number *Number, x int, y int) bool {
-	// // y axis
-	// if number.y-number.numLen-1 == y+1 {
-	// 	return true
-	// }
-	// if number.y == y-1 {
-	// 	return true
-	// }
-
-	// for i := 0; i < number.numLen; i++ {
-	// 	// x axis
-	// 	if number.x-i == x+1 {
-	// 		return true
-	// 	}
-	// 	if number.x-i == x-1 {
-	// 		return true
-	// 	}
-	// }
-
-  fmt.Printf("checking for %d\n", number.num)
-
-	if number.x == x+1 || number.x == x-1 {
-		return true
+func Reverse(str string) string {
+	var result strings.Builder
+	for i := len(str) - 1; i >= 0; i-- {
+		result.WriteByte(str[i])
 	}
 
-	return false
+	return result.String()
 }
 
 func main() {
@@ -83,54 +33,99 @@ func main() {
 	}
 
 	lines := strings.Split(string(data), "\n")
-	isPrevInt := false
-	var head *Number
-	var num strings.Builder
+	sum := 0
 
 	for i := 0; i < len(lines); i++ {
 		line := lines[i]
-		isPrevInt = false
 
 		for j := 0; j < len(line); j++ {
 			ch := string(line[j])
 
-			if isNumStr(ch) {
-				isPrevInt = true
-				num.WriteString(ch)
-			} else if isPrevInt {
-				chInt, err := strconv.Atoi(num.String())
-				if err != nil {
-					panic(err)
-				}
+			// Check if a symbol
+			if !isNumber(ch) && ch != "." {
+				// left
+				if j >= 1 && isNumber(string(line[j-1])) {
+					k := j - 1
+					var numStr strings.Builder
 
-				number := Number{
-					num:    chInt,
-					numLen: len(num.String()),
-					x:      i,
-					y:      j,
-				}
-				if head == nil {
-					head = &number
-				} else {
-					head.Append(&number)
-				}
-
-				isPrevInt = false
-				num = strings.Builder{}
-			}
-
-			if !isNumStr(ch) && ch != "." && head != nil {
-				ptr := head
-
-				for ptr.next != nil {
-					// TODO: Complete this
-					if checkAdjecent(ptr, i, j) {
-						fmt.Printf("%d for char %s\n", ptr.num, ch)
-						// push number to sum
+					for k >= 0 && isNumber(string(line[k])) {
+						numStr.WriteByte(line[k])
+						k--
 					}
-					ptr = ptr.next
+
+					num, err := strconv.Atoi(Reverse(numStr.String()))
+					if err != nil {
+						panic(err)
+					}
+
+					sum += num
+
+					fmt.Printf("%s found in left of %s\n", string(line[j-1]), ch)
+				}
+
+				// right
+				if j+2 <= len(line) && isNumber(string(line[j+1])) {
+					k := j + 1
+					var numStr strings.Builder
+
+					for k <= len(line)-1 && isNumber(string(line[k])) {
+						numStr.WriteByte(line[k])
+						k++
+					}
+
+					num, err := strconv.Atoi(numStr.String())
+					if err != nil {
+						panic(err)
+					}
+
+					sum += num
+
+					fmt.Printf("%s found in right of %s\n", string(line[j+1]), ch)
+				}
+
+				// top
+				if i-1 >= 0 && isNumber(string(lines[i-1][j])) {
+					// check if number tending to left
+					if j-1 >= 0 && isNumber(string(lines[i-1][j-1])) {
+						k := j
+						var numStr strings.Builder
+
+						for k >= 0 && isNumber(string(lines[i-1][k])) {
+							numStr.WriteByte(lines[i-1][k])
+							k--
+						}
+
+						num, err := strconv.Atoi(Reverse(numStr.String()))
+						if err != nil {
+							panic(err)
+						}
+
+						sum += num
+					}
+
+					// check if number tending to right
+					if j+2 <= len(lines[i-1]) && isNumber(string(lines[i-1][j+1])) {
+						k := j
+						var numStr strings.Builder
+
+						for k <= len(lines[i-1])-1 && isNumber(string(lines[i-1][k])) {
+							numStr.WriteByte(lines[i-1][k])
+							k++
+						}
+
+						num, err := strconv.Atoi(numStr.String())
+						if err != nil {
+							panic(err)
+						}
+
+						sum += num
+					}
+
+					fmt.Printf("%s found in top of %s\n", string(lines[i-1][j]), ch)
 				}
 			}
 		}
 	}
+
+	fmt.Println("answer=", sum)
 }
