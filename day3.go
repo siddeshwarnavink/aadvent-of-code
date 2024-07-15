@@ -26,6 +26,44 @@ func Reverse(str string) string {
 	return result.String()
 }
 
+func ExtractNumberTendingLeft(line *[]string, start int) int {
+	k := start
+	var numStr strings.Builder
+
+	for k >= 0 && isNumber((*line)[k]) {
+		numStr.WriteString((*line)[k])
+		k--
+	}
+
+	num, err := strconv.Atoi(Reverse(numStr.String()))
+	if err != nil {
+		panic(err)
+	}
+
+  fmt.Println("got", num)
+
+	return num
+}
+
+func ExtractNumberTendingRight(line *[]string, start int) int {
+	k := start
+	var numStr strings.Builder
+
+	for k <= len(*line)-1 && isNumber((*line)[k]) {
+		numStr.WriteString((*line)[k])
+		k++
+	}
+
+	num, err := strconv.Atoi(numStr.String())
+	if err != nil {
+		panic(err)
+	}
+
+  fmt.Println("got", num)
+
+	return num
+}
+
 func main() {
 	data, err := os.ReadFile("day3.txt")
 	if err != nil {
@@ -45,40 +83,16 @@ func main() {
 			if !isNumber(ch) && ch != "." {
 				// left
 				if j >= 1 && isNumber(string(line[j-1])) {
-					k := j - 1
-					var numStr strings.Builder
-
-					for k >= 0 && isNumber(string(line[k])) {
-						numStr.WriteByte(line[k])
-						k--
-					}
-
-					num, err := strconv.Atoi(Reverse(numStr.String()))
-					if err != nil {
-						panic(err)
-					}
-
-					sum += num
+					lineRef := strings.Split(line, "")
+					sum += ExtractNumberTendingLeft(&lineRef, j-1)
 
 					fmt.Printf("%s found in left of %s\n", string(line[j-1]), ch)
 				}
 
 				// right
 				if j+2 <= len(line) && isNumber(string(line[j+1])) {
-					k := j + 1
-					var numStr strings.Builder
-
-					for k <= len(line)-1 && isNumber(string(line[k])) {
-						numStr.WriteByte(line[k])
-						k++
-					}
-
-					num, err := strconv.Atoi(numStr.String())
-					if err != nil {
-						panic(err)
-					}
-
-					sum += num
+					lineRef := strings.Split(line, "")
+					sum += ExtractNumberTendingLeft(&lineRef, j+1)
 
 					fmt.Printf("%s found in right of %s\n", string(line[j+1]), ch)
 				}
@@ -87,41 +101,34 @@ func main() {
 				if i-1 >= 0 && isNumber(string(lines[i-1][j])) {
 					// check if number tending to left
 					if j-1 >= 0 && isNumber(string(lines[i-1][j-1])) {
-						k := j
-						var numStr strings.Builder
-
-						for k >= 0 && isNumber(string(lines[i-1][k])) {
-							numStr.WriteByte(lines[i-1][k])
-							k--
-						}
-
-						num, err := strconv.Atoi(Reverse(numStr.String()))
-						if err != nil {
-							panic(err)
-						}
-
-						sum += num
+						lineRef := strings.Split(lines[i-1], "")
+						sum += ExtractNumberTendingLeft(&lineRef, j)
 					}
 
 					// check if number tending to right
 					if j+2 <= len(lines[i-1]) && isNumber(string(lines[i-1][j+1])) {
-						k := j
-						var numStr strings.Builder
-
-						for k <= len(lines[i-1])-1 && isNumber(string(lines[i-1][k])) {
-							numStr.WriteByte(lines[i-1][k])
-							k++
-						}
-
-						num, err := strconv.Atoi(numStr.String())
-						if err != nil {
-							panic(err)
-						}
-
-						sum += num
+						lineRef := strings.Split(lines[i-1], "")
+						sum += ExtractNumberTendingRight(&lineRef, j)
 					}
 
 					fmt.Printf("%s found in top of %s\n", string(lines[i-1][j]), ch)
+				}
+
+				// bottom
+				if i+2 <= len(lines) && isNumber(string(lines[i+1][j])) {
+					// check if number tending to left
+					if j-1 >= 0 && isNumber(string(lines[i+1][j-1])) {
+						lineRef := strings.Split(lines[i+1], "")
+						sum += ExtractNumberTendingLeft(&lineRef, j)
+					}
+
+					// check if number tending to right
+					if j+2 <= len(lines[i+1]) && isNumber(string(lines[i+1][j+1])) {
+						lineRef := strings.Split(lines[i+1], "")
+						sum += ExtractNumberTendingRight(&lineRef, j)
+					}
+
+					fmt.Printf("%s found in bottom of %s\n", string(lines[i+1][j]), ch)
 				}
 			}
 		}
