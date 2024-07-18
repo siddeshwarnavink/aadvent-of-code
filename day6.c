@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *trimStr(char *s) {
+void trimStr(char *s, char **o) {
   int s_len = strlen(s);
   int front = 0, rear = s_len - 1;
 
@@ -14,35 +14,38 @@ char *trimStr(char *s) {
     rear--;
   }
 
-  int o_len = strlen(s) - (front + (s_len - rear));
-  char *o = (char *)malloc(o_len * sizeof(char));
+  int o_len = strlen(s) - (front + (s_len - rear)) + 1;
+  *o = (char *)malloc(o_len * sizeof(char));
   int i = 0;
 
-  while (front < rear) {
-    o[i] = s[front];
+  while (front <= rear) {
+    (*o)[i] = s[front];
     front++;
     i++;
   }
 
-  return o;
+  (*o)[i] = '\0';
 }
 
 int size = 0;
 
 int *extractData(char *line) {
+  char *trimLine;
+
   line = strstr(strstr(line, ":") + 1, " ");
-  line = trimStr(line);
+  trimStr(line, &trimLine);
 
   char *token;
   int i = 0;
   int *o = (int *)malloc(1 * sizeof(int));
+
   if (o == NULL) {
     printf("memory got burr\n");
     exit(1);
   }
 
   const char c[] = " ";
-  token = strtok(line, c);
+  token = strtok(trimLine, c);
 
   while (token != NULL) {
     int val = atoi(token);
@@ -60,6 +63,9 @@ int *extractData(char *line) {
   }
 
   size = i;
+
+  free(trimLine);
+  free(token);
 
   return o;
 }
