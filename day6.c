@@ -27,14 +27,19 @@ char *trimStr(char *s) {
   return o;
 }
 
+int size = 0;
+
 int *extractData(char *line) {
-  line = strstr(line, ":");
-  line = strstr(line, " ");
+  line = strstr(strstr(line, ":") + 1, " ");
   line = trimStr(line);
 
   char *token;
   int i = 0;
   int *o = (int *)malloc(1 * sizeof(int));
+  if (o == NULL) {
+    printf("memory got burr\n");
+    exit(1);
+  }
 
   const char c[] = " ";
   token = strtok(line, c);
@@ -43,11 +48,18 @@ int *extractData(char *line) {
     int val = atoi(token);
 
     o = (int *)realloc(o, (i + 1) * sizeof(int));
+    if (o == NULL) {
+      printf("memory got burr\n");
+      exit(1);
+    }
+
     o[i] = val;
 
     token = strtok(NULL, c);
     i++;
   }
+
+  size = i;
 
   return o;
 }
@@ -57,7 +69,6 @@ int main() {
   char *line;
   int *timeData = NULL, *distanceData = NULL;
   int result = 1;
-  const int size = 3; // TODO: get this dynamic
 
   if (filePtr == NULL) {
     printf("Failed to read the file");
