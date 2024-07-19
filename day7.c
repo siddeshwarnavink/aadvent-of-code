@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,8 +85,7 @@ void pushValue(uint *state, uint value) { *state |= (1 << value); }
 int isValue(uint state, uint value) { return (state & (1 << value)) != 0; }
 
 void calcHand(hand *h) {
-  uint state = 0;
-  int a = 0, a_val = 0, b = 0, b_val = 0;
+  uint state = 0, a = 0, a_val = 0, b = 0, b_val = 0;
 
   for (uint i = 0; h->cards[i] != '\0'; i++) {
     uint value = getCardRank(h->cards[i]);
@@ -123,6 +123,37 @@ void calcHand(hand *h) {
   }
 }
 
+void swapHands(hand **h1, hand **h2) {
+  hand *temp;
+  temp = *h1;
+  *h1 = *h2;
+  *h2 = temp;
+}
+
+void sortCardsInHands(hand ***h, uint size) {
+  bool swap = false;
+  do {
+    swap = false;
+    for (int i = 1; i < size; i++) {
+      if ((*h)[i]->type > (*h)[i - 1]->type) {
+        swapHands(&(*h)[i], &(*h)[i - 1]);
+        swap = true;
+      } else if ((*h)[i]->type == (*h)[i - 1]->type) {
+        int j = 0;
+        while (j < strlen((*h)[i]->cards) && j < strlen((*h)[i - 1]->cards)) {
+          char cardA = (*h)[i]->cards[j];
+          char cardB = (*h)[i - 1]->cards[j];
+          if (cardA != cardB && getCardRank(cardA) > getCardRank(cardB)) {
+            swapHands(&(*h)[i], &(*h)[i - 1]);
+            break;
+          }
+          j++;
+        }
+      }
+    }
+  } while (swap);
+}
+
 int main() {
   FILE *filePtr = fopen("day7.txt", "r");
   char line[50];
@@ -148,11 +179,17 @@ int main() {
     hands_size++;
   }
 
+  sortCardsInHands(&hands, hands_size);
+  uint result = 0;
+
   for (uint i = 0; i < hands_size; i++) {
-    display(*hands[i]);
+    result += hands[i]->bid * (i + 1);
+
     free(hands[i]->cards);
     free(hands[i]);
   }
+
+  printf("%d", result);
 
   fclose(filePtr);
 
