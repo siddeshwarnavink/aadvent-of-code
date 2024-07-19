@@ -184,10 +184,10 @@ int main() {
 
   for (uint i = 0; i < hands_size; i++) {
     result += hands[i]->bid * (i + 1);
-
     free(hands[i]->cards);
     free(hands[i]);
   }
+  free(hands);
 
   printf("%d", result);
 
