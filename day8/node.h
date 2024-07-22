@@ -9,7 +9,17 @@ typedef struct node {
   struct node *right;
 } node;
 
-node fromLine(char *line);
+typedef struct node_list {
+  struct node **list;
+  int size;
+} node_list;
+
+node *from(char *line);
 void display(node n);
+node_list *create();
+void add(node_list *list, node *n);
+node *find(node_list *list, char *label);
+void removeNode(node_list *list, char *label);
+void clean(node_list *list);
 
 #endif
