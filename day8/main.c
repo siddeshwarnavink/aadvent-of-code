@@ -9,9 +9,13 @@ int main() {
   char line[25];
 
   fgets(line, sizeof(line), file);
+  
   char *seq = (char *)malloc(sizeof(line));
-  strcpy(seq, seq);
-
+  int seq_len = strlen(line);
+  strncpy(seq, line, seq_len - 1);
+  seq[seq_len - 1] = '\0';
+  seq_len--;
+  
   fgets(line, sizeof(line), file);
   node_list *list = create();
 
@@ -28,9 +32,33 @@ int main() {
 
     n->left = left;
     n->right = right;
- 
-    display(*n);
+
+    // display(*n);
   }
+
+  // Start traversing
+  node *ptr = find(list, "AAA");
+  if (ptr == NULL) {
+    printf("AAA not found!\n");
+    fclose(file);
+    free(seq);
+    clean(list);
+    return 1;
+  }
+  
+  int i = 0, steps = 0;
+  while (strcmp(ptr->label, "ZZZ") != 0) {
+    if (seq[i] == 'L') {
+      ptr = ptr->left;
+    } else {
+      ptr = ptr->right;
+    }
+
+    i = (i + 1) % seq_len;
+    steps++;
+  }
+
+  printf("steps = %d", steps);
 
   fclose(file);
   free(seq);
